@@ -1,0 +1,8 @@
+export const DRAG = {
+    START: 'DRAG_START',
+    END: 'DRAG_END'
+}
+export const DESIGNER = {
+    ACTIVATE: 'DESIGNER_ACTIVATE',
+    PROP_CHANGE: 'DESIGNER_PROP_CHANGE'
+}
