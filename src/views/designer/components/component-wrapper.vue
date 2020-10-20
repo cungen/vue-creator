@@ -13,10 +13,17 @@ component.component-wrapper(
 
     // slot内容
     template(v-for='slot in slots' v-slot:[slot])
-        template(v-if='slot==="default" && (!slotComponents[slot] || !Object.keys(slotComponents[slot]).length)') {{component.name}}
-        component-wrapper(v-else v-for='child in slotComponents[slot]' :key='child._id' :component='child')
+        template(v-if='slot==="default" && (!slotComponents[slot] || !slotComponents[slot].length)')
+            #{childTag} {{component.name}}
+        component-wrapper(
+            v-else
+            v-for='(child, i) in slotComponents[slot]'
+            :key='child._id'
+            :component='child'
+            @delete='onChildDelete(slotComponents[slot], i)')
 
         drop.drop-area(
+            :tag='childTag'
             v-if='dragging'
             :class='{active: activeSlotId===slot}'
             @drop='onDrop'
@@ -53,6 +60,9 @@ export default Vue.extend({
         ]),
         isActive () {
             return this.activeComponent === this.refComponent
+        },
+        childTag () {
+            return this.$el.tagName === 'UL' || this.$el.tagName === 'OL' ? 'li' : 'div'
         }
     },
     watch: {
@@ -60,7 +70,9 @@ export default Vue.extend({
             if (this.isActive) {
                 const props = {}
                 now.forEach(item => {
-                    props[item.key] = item.value
+                    if (typeof item.value !== 'undefined' && item.value !== '') {
+                        props[item.key] = item.value
+                    }
                 })
                 this.props = props
             }
@@ -106,7 +118,7 @@ export default Vue.extend({
         onDrop () {
             if (this.activeSlotId) {
                 if (!this.slotComponents[this.activeSlotId]) {
-                    this.slotComponents[this.activeSlotId] = []
+                    this.$set(this.slotComponents, this.activeSlotId, [])
                 }
                 this.slotComponents[this.activeSlotId].push({
                     ...this.dragPayload,
@@ -117,6 +129,9 @@ export default Vue.extend({
         },
         onClick () {
             this.$store.commit(DESIGNER.ACTIVATE, this.$refs.component)
+        },
+        onChildDelete (set, index) {
+            set.splice(index, 1)
         }
     }
 })
@@ -124,9 +139,8 @@ export default Vue.extend({
 <style lang="sass" scoped>
 .component-wrapper
     border: 1px dashed #1890ff
-    padding: 2px
-    margin: 4px
-    border-radius: 4px
+    padding: 6px 0
+    border-radius: 2px
     &.c-active
         border-color: #52c41a
         border-style: solid

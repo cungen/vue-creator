@@ -39,6 +39,8 @@ $right: 200px
         border-right: 1px solid #f0f0f0
     .d-center
         flex: 1 1 auto
+        height: 100%
+        overflow: auto
     .d-right
         flex: 0 0 $right
         height: 100%

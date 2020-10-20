@@ -9,12 +9,30 @@ import * as AntComponents from 'ant-design-vue'
 import { Drag } from 'vue-drag-drop'
 import { DRAG } from '../../../store/types'
 
+Vue.component('CgText', {
+    name: 'CgText',
+    props: {
+        text: {
+            type: String
+        }
+    },
+    render (h) {
+        return h('span', this.text || this.$slots.default)
+    }
+})
+
 function getAntPackage () {
     const ants = []
     for (const i in AntComponents) {
         const c = AntComponents[i as keyof typeof AntComponents]
         if (c && Object.hasOwnProperty.call(c, 'name') && Object.hasOwnProperty.call(c, 'install')) {
             ants.push(c)
+            for (const key in c) {
+                const sub = c[key as keyof typeof c]
+                if (Object.hasOwnProperty.call(sub, 'render') && Object.hasOwnProperty.call(sub, 'name')) {
+                    ants.push(sub)
+                }
+            }
         }
     }
     return {
@@ -30,7 +48,11 @@ function getLayoutPackage () {
             AntComponents.Row,
             AntComponents.Col,
             AntComponents.Divider,
-            AntComponents.Layout
+            AntComponents.Layout,
+            { name: 'ALayoutSider' },
+            { name: 'ALayoutHeader' },
+            { name: 'ALayoutContent' },
+            { name: 'ALayoutFooter' }
         ]
     }
 }
@@ -38,7 +60,9 @@ function getLayoutPackage () {
 function getOtherPackage () {
     return {
         name: 'Others',
-        children: []
+        children: [
+            { name: 'CgText' }
+        ]
     }
 }
 

@@ -1,6 +1,6 @@
 <template lang="pug">
 .playground
-    ComponentWrapper(v-for='child in children' :component='child' :key='child._id')
+    ComponentWrapper(v-for='(child, i) in children' :component='child' :key='child._id' @delete='onDelete(i)')
     drop.drop-area(
         v-if='dragging'
         :class='{active: activeId==="new"}'
@@ -40,6 +40,9 @@ export default Vue.extend({
                 ...this.dragPayload,
                 _id: Date.now()
             })
+        },
+        onDelete (index: number) {
+            this.children.splice(index, 1)
         }
     }
 })
@@ -49,6 +52,7 @@ export default Vue.extend({
 $red: #f81d22
 
 .playground
+    padding: 20px
     &::v-deep
         .drop-area
             border: 1px dashed $red
@@ -56,7 +60,6 @@ $red: #f81d22
             margin: 5px
             border-radius: 4px
             min-height: 20px
-            height: 100%
             overflow: hidden
             &.active
                 background: rgba($red, 0.2)

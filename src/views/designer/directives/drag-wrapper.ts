@@ -1,34 +1,50 @@
 import Vue, { VNode } from 'vue'
+import DragWrapperOpts from '../components/drag-wrapper-opts.vue'
 
 class DragWrapperModel {
     el: HTMLElement
-    context: Vue|undefined
+    vnode: VNode
+    comp: Vue
+    hasAppend: boolean
 
     constructor (el: HTMLElement, vnode: VNode) {
         this.el = el
-        this.context = vnode.context
-    }
+        this.vnode = vnode
+        this.comp = new Vue(DragWrapperOpts)
+        this.comp.$mount()
+        this.hasAppend = false
+        this.bindEvent()
 
-    onMouseEnter () {
-        const ele = this.el.querySelector('.drag-wrapper__opts')
-        if (!ele) {
-            const fragment = document.createDocumentFragment()
-            const div = document.createElement('div')
-            div.className = 'drag-wrapper__opts'
-            div.innerText = 'test'
-            fragment.append(div)
-            this.el.appendChild(fragment)
-        } else {
-            ele.setAttribute('style', 'display: block')
+        const pos = window.getComputedStyle(el).position
+        if (pos !== 'absolute' && pos !== 'fixed') {
+            el.style.position = 'relative'
         }
     }
 
-    onMouseLeave () {
-        const ele = this.el.querySelector('.drag-wrapper__opts')
-        if (ele) {
-            ele.setAttribute('style', 'block')
-            ele.setAttribute('style', 'display: none')
+    bindEvent () {
+        this.comp.$on('delete', () => {
+            if (this.vnode.context) {
+                this.vnode.context.$emit('delete')
+            }
+        })
+    }
+
+    onMouseEnter = (e: Event) => {
+        if (!this.hasAppend && this.comp?.$el) {
+            this.el.appendChild(this.comp.$el)
+            this.hasAppend = true
         }
+        this.comp.$props.show = true
+        e.stopPropagation()
+    }
+
+    onMouseLeave = (e: MouseEvent) => {
+        if (this.comp) {
+            if (!this.comp.$el.contains(e.relatedTarget as Node)) {
+                this.comp.$props.show = false
+            }
+        }
+        e.stopPropagation()
     }
 }
 
@@ -40,24 +56,20 @@ export default Vue.directive('drag-wrapper', {
     bind (el: DragEl, binding, vnode: VNode) {
         const model = new DragWrapperModel(el, vnode)
 
-        if (!Object.prototype.hasOwnProperty.call(el, '__drag_wrapper')) {
+        if (!Object.hasOwnProperty.call(el, '__drag_wrapper')) {
             Object.assign(el, {
                 __dragWrapper: model
             })
         }
 
-        el.addEventListener('mouseenter', model.onMouseEnter.bind(model))
-        el.addEventListener('mouseleave', model.onMouseLeave.bind(model))
+        el.addEventListener('mouseover', model.onMouseEnter)
+        el.addEventListener('mouseout', model.onMouseLeave)
     },
     unbind (el: DragEl) {
-        if (Object.prototype.hasOwnProperty.call(el, '__drag_wrapper')) {
+        if (Object.hasOwnProperty.call(el, '__drag_wrapper')) {
             const model = el.__dragWrapper as DragWrapperModel
-            // todo 测试是否真的销毁了
-            el.removeEventListener('mouseenter', model.onMouseEnter)
-            el.removeEventListener('mouseleave', model.onMouseLeave)
+            el.removeEventListener('mouseover', model.onMouseEnter)
+            el.removeEventListener('mouseout', model.onMouseLeave)
         }
-    },
-    inserted (el) {
-        console.log('inserted', el)
     }
 })
