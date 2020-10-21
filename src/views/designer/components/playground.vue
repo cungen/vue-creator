@@ -1,25 +1,26 @@
 <template lang="pug">
 .playground
     ComponentWrapper(v-for='(child, i) in children' :component='child' :key='child._id' @delete='onDelete(i)')
-    drop.drop-area(
+    .drop-area(
         v-if='dragging'
         :class='{active: activeId==="new"}'
-        @drop='onDrop'
-        @dragenter="activeId='new'"
-        @dragleave="activeId=''")
+        v-drop="{drop: onDrop, dragEnter: () => activeId = 'new', dragLeave: () => activeId = ''}"
+    )
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
-import { Drop } from 'vue-drag-drop'
 import { DRAG } from '../../../store/types'
+import { Drop } from '../directives/drag-drop'
 import ComponentWrapper from './component-wrapper.vue'
 
 export default Vue.extend({
     components: {
-        Drop,
         ComponentWrapper
+    },
+    directives: {
+        drop: Drop
     },
     computed: {
         ...mapGetters([

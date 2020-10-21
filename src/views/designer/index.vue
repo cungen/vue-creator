@@ -24,8 +24,8 @@ export default {
 </script>
 
 <style lang="sass" scoped>
-$left: 180px
-$right: 200px
+$left: 220px
+$right: 240px
 
 .designer
     display: flex
@@ -35,7 +35,7 @@ $right: 200px
         flex: 0 0 $left
         height: 100%
         overflow: auto
-        background: #eee
+        background: #f0f0f0
         border-right: 1px solid #f0f0f0
     .d-center
         flex: 1 1 auto
@@ -45,7 +45,7 @@ $right: 200px
         flex: 0 0 $right
         height: 100%
         overflow: auto
-        background: #eee
+        background: #f0f0f0
         border-left: 1px solid #f0f0f0
 
 </style>

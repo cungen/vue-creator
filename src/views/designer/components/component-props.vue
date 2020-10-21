@@ -52,7 +52,11 @@ export default Vue.extend({
     watch: {
         activeComponent (now, old) {
             if (now !== old) {
-                this.update()
+                if (now) {
+                    this.update()
+                } else {
+                    this.props = []
+                }
             }
         }
     },
@@ -75,16 +79,19 @@ export default Vue.extend({
                 const prop = allProps[k]
                 const val = Object.hasOwnProperty.call(preValues, k) ? preValues[k] : undefined
                 const showType = this.getShowType(prop.type)
-                this.props.push({
+                const item = {
                     ...prop,
                     showType: showType,
                     key: k,
                     name: k,
-                    value: this.isFunction(val) ? (showType === 'textarea' ? val.toString() : val()) : ((this.isObject(val) || this.isArray(val)) && showType === 'textarea' ? JSON.stringify(val) : val),
-                    hasError: Boolean(allProps[k].validator && val !== undefined && !allProps[k].validator(val))
-                })
+                    value: this.isFunction(val)
+                        ? (showType === 'textarea' ? val.toString() : val())
+                        : ((this.isObject(val) || this.isArray(val)) && showType === 'textarea' ? JSON.stringify(val) : val)
+                }
+                item.hasError = !this.validate(item)
+
+                this.props.push(item)
             })
-            console.log(this.props)
         },
         getShowType (type) {
             if (this.isArray(type)) {
@@ -107,13 +114,17 @@ export default Vue.extend({
             return 'textarea'
         },
         validate (prop) {
-            return !prop.validator || prop.validator(prop.value)
+            const val = this.adaptValue(prop)
+            if (val !== undefined && val !== '') {
+                return !prop.validator || prop.validator(val)
+            }
+            return true
         },
         adaptValue (prop) {
-            if (prop.showType === 'textarea' && prop.value) {
+            if (prop.showType === 'textarea' && prop.type && prop.value) {
                 if (prop.type.name === 'Object' || prop.type.name === 'Array') {
                     try {
-                        return JSON.parse(prop.value)
+                        return safeEval(prop.value)
                     } catch (e) {
                         return prop.type.name === 'Object' ? {} : []
                     }
@@ -123,12 +134,12 @@ export default Vue.extend({
             }
             return prop.value
         },
-        onPropChange (prop) {
+        onPropChange: _.debounce(function (prop) {
             prop.hasError = !this.validate(prop)
             const rs = this.props.map(p => {
                 return {
                     ...p,
-                    value: p
+                    value: this.adaptValue(p)
                 }
             }).filter(p => {
                 return !p.hasError && [null, '', undefined].indexOf(p.value) === -1
@@ -136,7 +147,7 @@ export default Vue.extend({
             console.log('commit prop', rs)
 
             this.$store.commit(DESIGNER.PROP_CHANGE, rs)
-        }
+        }, 300)
     }
 })
 </script>

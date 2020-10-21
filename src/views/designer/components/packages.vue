@@ -1,13 +1,22 @@
 <template lang="pug">
 a-collapse.packages(:bordered='false')
     a-collapse-panel(v-for='p in packages' :key="p.name" :header="p.name")
-        drag.c-item(v-for='c in p.children' :key='c.name' @dragstart='onDragStart' @dragend='onDragEnd' :transferData='c') {{c.name}}
+        template(v-for='c in p.children')
+            .c-item(
+                v-drag='{ dragStart: onDragStart, dragEnd: onDragEnd, transferData: c }'
+            ) {{c.name}}
+            .c-item-children(v-if='c.children && c.children.length')
+                .c-item(
+                    v-for='sub in c.children'
+                    :key='sub.name'
+                    v-drag='{ dragStart: onDragStart, dragEnd: onDragEnd, transferData: sub }'
+                ) {{sub.name}}
 </template>
 <script lang="ts">
 import Vue from 'vue'
 import * as AntComponents from 'ant-design-vue'
-import { Drag } from 'vue-drag-drop'
 import { DRAG } from '../../../store/types'
+import { Drag } from '../directives/drag-drop'
 
 Vue.component('CgText', {
     name: 'CgText',
@@ -27,12 +36,14 @@ function getAntPackage () {
         const c = AntComponents[i as keyof typeof AntComponents]
         if (c && Object.hasOwnProperty.call(c, 'name') && Object.hasOwnProperty.call(c, 'install')) {
             ants.push(c)
+            const children = [] as Array<typeof c>
             for (const key in c) {
                 const sub = c[key as keyof typeof c]
                 if (Object.hasOwnProperty.call(sub, 'render') && Object.hasOwnProperty.call(sub, 'name')) {
-                    ants.push(sub)
+                    children.push(sub)
                 }
             }
+            Object.assign(c, { children: children })
         }
     }
     return {
@@ -48,11 +59,7 @@ function getLayoutPackage () {
             AntComponents.Row,
             AntComponents.Col,
             AntComponents.Divider,
-            AntComponents.Layout,
-            { name: 'ALayoutSider' },
-            { name: 'ALayoutHeader' },
-            { name: 'ALayoutContent' },
-            { name: 'ALayoutFooter' }
+            AntComponents.Layout
         ]
     }
 }
@@ -67,8 +74,8 @@ function getOtherPackage () {
 }
 
 export default Vue.extend({
-    components: {
-        Drag
+    directives: {
+        drag: Drag
     },
     data () {
         const packages = [
@@ -107,4 +114,13 @@ export default Vue.extend({
     margin-bottom: 6px
     cursor: move
 
+.c-item-children
+    border: 1px dashed #ddd
+    border-radius: 2px
+    padding: 6px 6px 0
+    margin-bottom: 6px
+    font-size: 0.85em
+    .c-item
+        height: 24px
+        line-height: 24px
 </style>

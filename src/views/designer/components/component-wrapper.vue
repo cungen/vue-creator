@@ -9,12 +9,20 @@ component.component-wrapper(
 )
     // 用来测试是否存在相关slot
     template(v-if='testingSlot' v-slot:[testingSlot])
-        .slot-test(ref='testingSlot')
+        component.slot-test(
+            v-if='hasChildren'
+            :is='component.children[0].name'
+            ref='testingSlot')
+        .slot-test(v-else ref='testingSlot') test
 
     // slot内容
     template(v-for='slot in slots' v-slot:[slot])
         template(v-if='slot==="default" && (!slotComponents[slot] || !slotComponents[slot].length)')
-            #{childTag} {{component.name}}
+            component(
+                v-if='hasChildren'
+                :is='component.children[0].name'
+                ) {{component.name}}
+            template(v-else) {{component.name}}
         component-wrapper(
             v-else
             v-for='(child, i) in slotComponents[slot]'
@@ -22,20 +30,24 @@ component.component-wrapper(
             :component='child'
             @delete='onChildDelete(slotComponents[slot], i)')
 
-        drop.drop-area(
-            :tag='childTag'
-            v-if='dragging'
+        component.drop-area(
+            v-if='dragging && hasChildren'
+            :is='component.children[0].name'
             :class='{active: activeSlotId===slot}'
-            @drop='onDrop'
-            @dragenter="activeSlotId=slot"
-            @dragleave="activeSlotId=''")
+            v-drop="{drop: onDrop, dragEnter: () => activeSlotId=slot, dragLeave: () => activeSlotId=null}"
+        )
+        .drop-area(
+            v-else-if='dragging'
+            :class='{active: activeSlotId===slot}'
+            v-drop="{drop: onDrop, dragEnter: () => activeSlotId=slot, dragLeave: () => activeSlotId=null}"
+        )
 </template>
 <script>
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
-import { Drop } from 'vue-drag-drop'
 import { DRAG, DESIGNER } from '../../../store/types'
 import DragWrapper from '../directives/drag-wrapper'
+import { Drop } from '../directives/drag-drop'
 
 export default Vue.extend({
     name: 'ComponentWrapper',
@@ -43,7 +55,8 @@ export default Vue.extend({
         Drop
     },
     directives: {
-        DragWrapper
+        DragWrapper,
+        Drop
     },
     props: {
         component: {
@@ -61,8 +74,13 @@ export default Vue.extend({
         isActive () {
             return this.activeComponent === this.refComponent
         },
-        childTag () {
-            return this.$el.tagName === 'UL' || this.$el.tagName === 'OL' ? 'li' : 'div'
+        hasChildren () {
+            return this.component.children && this.component.children.length
+        }
+    },
+    beforeDestroy () {
+        if (this.isActive) {
+            this.$store.commit(DESIGNER.ACTIVATE, null)
         }
     },
     watch: {
@@ -91,7 +109,8 @@ export default Vue.extend({
     },
     mounted () {
         if (this.$refs.component) {
-            const propKeys = ['default', ...Object.keys(this.$refs.component._props)]
+            console.log(this.$refs.component._props, this.component)
+            const propKeys = ['default', ...Object.keys(this.$refs.component._props || {})]
             this.checkSlotKey(propKeys).then(() => {
                 this.testingSlot = null
             })
@@ -139,8 +158,7 @@ export default Vue.extend({
 <style lang="sass" scoped>
 .component-wrapper
     border: 1px dashed #1890ff
-    padding: 6px 0
-    border-radius: 2px
+    min-height: 8px
     &.c-active
         border-color: #52c41a
         border-style: solid
