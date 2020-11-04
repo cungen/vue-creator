@@ -1,10 +1,8 @@
 <template lang="pug">
 .playground
-    ComponentWrapper(v-for='(child, i) in children' :component='child' :key='child._id' @delete='onDelete(i)')
-    .drop-area(
-        v-if='dragging'
-        :class='{active: activeId==="new"}'
-        v-drop="{drop: onDrop, dragEnter: () => activeId = 'new', dragLeave: () => activeId = ''}"
+    ComponentItem(v-for='(child, i) in children' :component='child' :key='child._id' @delete='onDelete(i)')
+    drop-area(
+        @drop='onDrop'
     )
 </template>
 
@@ -12,26 +10,22 @@
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import { DRAG } from '../../../store/types'
-import { Drop } from '../directives/drag-drop'
-import ComponentWrapper from './component-wrapper.vue'
+import ComponentItem from './component-item.vue'
+import DropArea from './drop-area.vue'
 
 export default Vue.extend({
     components: {
-        ComponentWrapper
-    },
-    directives: {
-        drop: Drop
+        ComponentItem,
+        DropArea
     },
     computed: {
         ...mapGetters([
-            'dragging',
             'dragPayload'
         ])
     },
     data () {
         return {
-            children: [] as DragPayload[],
-            activeId: ''
+            children: [] as DragPayload[]
         }
     },
     methods: {
@@ -50,19 +44,10 @@ export default Vue.extend({
 </script>
 
 <style lang="sass" scoped>
-$red: #f81d22
 
 .playground
     padding: 20px
-    &::v-deep
-        .drop-area
-            border: 1px dashed $red
-            padding: 5px
-            margin: 5px
-            border-radius: 4px
-            min-height: 20px
-            overflow: hidden
-            &.active
-                background: rgba($red, 0.2)
+.component-wrapper
+    margin-bottom: 8px
 
 </style>

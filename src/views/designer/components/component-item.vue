@@ -5,7 +5,7 @@ component.component-wrapper(
     v-bind='props'
     @click.native.stop='onClick'
     :class='{"c-active": isActive}'
-    v-drag-wrapper
+    v-component-decorator
 )
     // 用来测试是否存在相关slot
     template(v-if='testingSlot' v-slot:[testingSlot])
@@ -17,45 +17,40 @@ component.component-wrapper(
 
     // slot内容
     template(v-for='slot in slots' v-slot:[slot])
-        template(v-if='slot==="default" && (!slotComponents[slot] || !slotComponents[slot].length)')
+        //- template(v-if='slot==="default" && (!slotComponents[slot] || !slotComponents[slot].length)')
             component(
                 v-if='hasChildren'
                 :is='component.children[0].name'
                 ) {{component.name}}
-            template(v-else) {{component.name}}
-        component-wrapper(
-            v-else
+        component-item(
             v-for='(child, i) in slotComponents[slot]'
             :key='child._id'
             :component='child'
             @delete='onChildDelete(slotComponents[slot], i)')
 
-        component.drop-area(
-            v-if='dragging && hasChildren'
-            :is='component.children[0].name'
-            :class='{active: activeSlotId===slot}'
-            v-drop="{drop: onDrop, dragEnter: () => activeSlotId=slot, dragLeave: () => activeSlotId=null}"
-        )
-        .drop-area(
-            v-else-if='dragging'
-            :class='{active: activeSlotId===slot}'
-            v-drop="{drop: onDrop, dragEnter: () => activeSlotId=slot, dragLeave: () => activeSlotId=null}"
+        drop-area(
+            v-if='dragging || slot==="default" && (!slotComponents[slot] || !slotComponents[slot].length)'
+            ref='slot'
+            :placeholder='"#" + slot'
+            @drop='onDrop(slot)'
         )
 </template>
 <script>
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import { DRAG, DESIGNER } from '../../../store/types'
-import DragWrapper from '../directives/drag-wrapper'
+import ComponentDecorator from '../directives/component-decorator'
 import { Drop } from '../directives/drag-drop'
+import DropArea from './drop-area.vue'
 
 export default Vue.extend({
-    name: 'ComponentWrapper',
+    name: 'ComponentItem',
     components: {
-        Drop
+        Drop,
+        DropArea
     },
     directives: {
-        DragWrapper,
+        ComponentDecorator,
         Drop
     },
     props: {
@@ -69,13 +64,17 @@ export default Vue.extend({
             'dragging',
             'dragPayload',
             'activeComponent',
-            'activeProps'
+            'activeProps',
+            'activeDbl'
         ]),
         isActive () {
             return this.activeComponent === this.refComponent
         },
         hasChildren () {
             return this.component.children && this.component.children.length
+        },
+        isFocus () {
+            return this.$slots.drop.indexOf(document.activeElement) !== -1
         }
     },
     beforeDestroy () {
@@ -93,6 +92,11 @@ export default Vue.extend({
                     }
                 })
                 this.props = props
+            }
+        },
+        activeDbl (now) {
+            if (this.isFocus) {
+                console.log(now)
             }
         }
     },
@@ -134,16 +138,14 @@ export default Vue.extend({
                 })
             })
         },
-        onDrop () {
-            if (this.activeSlotId) {
-                if (!this.slotComponents[this.activeSlotId]) {
-                    this.$set(this.slotComponents, this.activeSlotId, [])
-                }
-                this.slotComponents[this.activeSlotId].push({
-                    ...this.dragPayload,
-                    _id: Date.now()
-                })
+        onDrop (slotName) {
+            if (!this.slotComponents[slotName]) {
+                this.$set(this.slotComponents, slotName, [])
             }
+            this.slotComponents[slotName].push({
+                ...this.dragPayload,
+                _id: Date.now()
+            })
             this.$store.commit(DRAG.END)
         },
         onClick () {
@@ -156,11 +158,13 @@ export default Vue.extend({
 })
 </script>
 <style lang="sass" scoped>
+$red: #f81d22
+$green: #42b983
+
 .component-wrapper
-    border: 1px dashed #1890ff
-    min-height: 8px
+    // border: 1px dotted rgba(#1890ff, 0.9)
     &.c-active
-        border-color: #52c41a
-        border-style: solid
+        // border-color: rgba($red, 0.9)
+        // outline: 1px solid rgba($red, 0.4)
 
 </style>

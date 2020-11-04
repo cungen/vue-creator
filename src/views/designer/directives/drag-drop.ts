@@ -32,9 +32,6 @@ export const Drag = Vue.directive('drag', {
                 if (binding.value.dragEnd) {
                     binding.value.dragEnd(binding.value.transferData)
                 }
-            },
-            drop () {
-                console.log('test')
             }
         }
 
@@ -44,7 +41,6 @@ export const Drag = Vue.directive('drag', {
 
         el.addEventListener('dragstart', data.dragStart)
         el.addEventListener('dragend', data.dragEnd)
-        el.addEventListener('drop', data.drop)
     },
     unbind (el: DragEl) {
         el.removeAttribute('draggable')
@@ -73,10 +69,11 @@ export const Drop = Vue.directive('drop', {
                 }
                 e.preventDefault()
             },
-            dragLeave () {
+            dragLeave (e: DragEvent) {
                 if (binding.value.dragLeave) {
                     binding.value.dragLeave()
                 }
+                e.preventDefault()
             },
             dragOver (e: DragEvent) {
                 if (binding.value.dragOver) {
