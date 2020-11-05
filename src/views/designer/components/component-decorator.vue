@@ -40,7 +40,7 @@ export default Vue.extend({
         clickNode (node: Vue) {
             if (node) {
                 const ele = node.$el as HTMLElement
-                const { left, top, width, height } = ele.getClientRects()[0]
+                const { left, top, width, height } = ele.getBoundingClientRect()
                 this.style.active = {
                     left: Number(left) - 2 + 'px',
                     top: Number(top) - 2 + 'px',
@@ -57,7 +57,7 @@ export default Vue.extend({
     },
     methods: {
         updateStyle (ele: HTMLElement) {
-            const { left, top, width, height } = ele.getClientRects()[0]
+            const { left, top, width, height } = ele.getBoundingClientRect()
             this.style.outline = {
                 left: Number(left) - 2 + 'px',
                 top: Number(top) - 2 + 'px',
@@ -90,7 +90,10 @@ export default Vue.extend({
         onMouseOver () {
             this.cancelHide()
         },
-        onMouseOut () {
+        onMouseOut (e: MouseEvent) {
+            if (this.relatedNode.$el.contains(e.relatedTarget as HTMLElement)) {
+                return
+            }
             this.hide()
         }
     }

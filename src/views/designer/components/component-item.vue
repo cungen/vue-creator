@@ -8,7 +8,7 @@ component.component-wrapper(
     v-component-decorator
 )
     // 用来测试是否存在相关slot
-    template(v-if='testingSlot' v-slot:[testingSlot])
+    //- template(v-if='testingSlot' v-slot:[testingSlot])
         component.slot-test(
             v-if='hasChildren'
             :is='component.children[0].name'
@@ -31,6 +31,7 @@ component.component-wrapper(
         drop-area(
             v-if='dragging || slot==="default" && (!slotComponents[slot] || !slotComponents[slot].length)'
             ref='slot'
+            :tag='dropTag'
             :placeholder='"#" + slot'
             @drop='onDrop(slot)'
         )
@@ -45,6 +46,12 @@ import DropArea from './drop-area.vue'
 
 export default Vue.extend({
     name: 'ComponentItem',
+    props: {
+        component: {
+            type: Object,
+            required: true
+        }
+    },
     components: {
         Drop,
         DropArea
@@ -53,10 +60,15 @@ export default Vue.extend({
         ComponentDecorator,
         Drop
     },
-    props: {
-        component: {
-            type: Object,
-            required: true
+    data () {
+        return {
+            children: [],
+            slots: [],
+            slotComponents: {},
+            activeSlotId: '',
+            testingSlot: null,
+            refComponent: null,
+            props: {}
         }
     },
     computed: {
@@ -75,6 +87,14 @@ export default Vue.extend({
         },
         isFocus () {
             return this.$slots.drop.indexOf(document.activeElement) !== -1
+        },
+        dropTag () {
+            const parentTag = this.$el.nodeName.toLowerCase()
+            const childMap = {
+                span: 'span', table: 'tr', tr: 'td', ol: 'li', ul: 'li', dl: 'dd', button: 'div'
+
+            }
+            return childMap[parentTag] || 'div'
         }
     },
     beforeDestroy () {
@@ -100,25 +120,16 @@ export default Vue.extend({
             }
         }
     },
-    data () {
-        return {
-            children: [],
-            slots: [],
-            slotComponents: {},
-            activeSlotId: '',
-            testingSlot: null,
-            refComponent: null,
-            props: {}
-        }
-    },
     mounted () {
         if (this.$refs.component) {
-            const propKeys = ['default', ...Object.keys(this.$refs.component._props || {})]
-            this.checkSlotKey(propKeys).then(() => {
-                this.testingSlot = null
-            })
+            this.slots = this.component.slots || []
+            // const propKeys = ['default', ...Object.keys(this.$refs.component._props || {})]
+            // this.checkSlotKey(propKeys).then(() => {
+            //     this.testingSlot = null
+            // })
             this.refComponent = this.$refs.component
         }
+        this.props = this.component.defaultProps || {}
     },
     methods: {
         checkSlotKey (keys) {

@@ -17,23 +17,28 @@ a-collapse.packages(:bordered='false')
 <script lang="ts">
 import Vue from 'vue'
 import * as AntComponents from 'ant-design-vue'
-import * as ElementComponents from 'element-ui'
-import * as Vuetify from 'vuetify/es5/components/index'
+// import * as ElementComponents from 'element-ui'
+// import * as Vuetify from 'vuetify/es5/components/index'
 import { DRAG, DESIGNER } from '../../../store/types'
 import { Drag } from '../directives/drag-drop'
 
 Vue.component('CgText', {
     name: 'CgText',
     props: {
+        tag: {
+            type: String,
+            default: 'div'
+        },
         text: {
             type: String
         }
     },
     render (h) {
-        return h('span', this.text || this.$slots.default)
+        return h(this.tag, this.text || 'text placeholder')
     }
 })
 
+/*
 function getElementPackage () {
     const list = []
     for (const i in ElementComponents) {
@@ -57,29 +62,37 @@ function getElementPackage () {
         children: list
     }
 }
+*/
 
 function getAntPackage () {
-    const ants = []
-    for (const i in AntComponents) {
-        const c = AntComponents[i as keyof typeof AntComponents]
-        if (c && Object.hasOwnProperty.call(c, 'name') && Object.hasOwnProperty.call(c, 'install')) {
-            ants.push(c)
-            const children = [] as Array<typeof c>
-            for (const key in c) {
-                const sub = c[key as keyof typeof c]
-                if (Object.hasOwnProperty.call(sub, 'render') && Object.hasOwnProperty.call(sub, 'name')) {
-                    children.push(sub)
-                }
-            }
-            Object.assign(c, { children: children })
-        }
-    }
+    const ants = [{
+        name: AntComponents.Button.name,
+        defaultProps: {
+            type: 'primary'
+        },
+        slots: ['default']
+    }]
+    // for (const i in AntComponents) {
+    //     const c = AntComponents[i as keyof typeof AntComponents]
+    //     if (c && Object.hasOwnProperty.call(c, 'name') && Object.hasOwnProperty.call(c, 'install')) {
+    //         ants.push(c)
+    //         const children = [] as Array<typeof c>
+    //         for (const key in c) {
+    //             const sub = c[key as keyof typeof c]
+    //             if (Object.hasOwnProperty.call(sub, 'render') && Object.hasOwnProperty.call(sub, 'name')) {
+    //                 children.push(sub)
+    //             }
+    //         }
+    //         Object.assign(c, { children: children })
+    //     }
+    // }
     return {
         name: 'Ant Design',
         children: ants
     }
 }
 
+/*
 function getVuetifyPackage () {
     const list = []
     for (const i in Vuetify) {
@@ -94,13 +107,24 @@ function getVuetifyPackage () {
         children: list
     }
 }
+*/
 
 function getLayoutPackage () {
     return {
         name: 'Layout',
         children: [
-            AntComponents.Row,
-            AntComponents.Col,
+            {
+                name: AntComponents.Row.name,
+                defaultProps: {
+                    gutter: 10
+                }
+            },
+            {
+                name: AntComponents.Col.name,
+                defaultProps: {
+                    span: 12
+                }
+            },
             AntComponents.Divider,
             AntComponents.Layout
         ]
@@ -122,11 +146,11 @@ export default Vue.extend({
     },
     data () {
         const packages = [
-            getLayoutPackage()
+            getLayoutPackage(),
             // getVuetifyPackage(),
             // getElementPackage(),
-            // getAntPackage(),
-            // getOtherPackage()
+            getAntPackage(),
+            getOtherPackage()
         ]
 
         return {
