@@ -1,20 +1,16 @@
 import Vue from 'vue'
+import { VNode } from 'vue/types/umd'
 import ComponentDecorator from '../components/component-decorator.vue'
 
 let decorator = null as null|Vue
 let initialized = false
 
 class ComponentModel {
-    el: HTMLElement
+    vnode: VNode
 
-    constructor (el: HTMLElement) {
-        this.el = el
+    constructor (vnode: VNode) {
+        this.vnode = vnode
         this.init()
-
-        const pos = window.getComputedStyle(el).position
-        if (pos !== 'absolute' && pos !== 'fixed') {
-            el.style.position = 'relative'
-        }
     }
 
     init () {
@@ -31,11 +27,9 @@ class ComponentModel {
     }
 
     onMouseEnter = (e: MouseEvent) => {
-        const target = e.target as HTMLElement
-        const comEle = target.closest('.component-wrapper')
-        if (comEle && decorator) {
+        if (decorator) {
             Object.assign(decorator.$props, {
-                relatedEle: comEle
+                relatedNode: this.vnode.context
             })
         }
         e.stopPropagation()
@@ -47,6 +41,14 @@ class ComponentModel {
         }
         e.stopPropagation()
     }
+
+    onClick = () => {
+        if (decorator) {
+            Object.assign(decorator.$props, {
+                clickNode: this.vnode.context
+            })
+        }
+    }
 }
 
 interface DragEl extends HTMLElement {
@@ -54,8 +56,8 @@ interface DragEl extends HTMLElement {
 }
 
 export default Vue.directive('component-decorator', {
-    bind (el: DragEl) {
-        const model = new ComponentModel(el)
+    bind (el: DragEl, binding, vnode: VNode) {
+        const model = new ComponentModel(vnode)
 
         if (!Object.hasOwnProperty.call(el, '__drag_wrapper')) {
             Object.assign(el, {
@@ -65,12 +67,14 @@ export default Vue.directive('component-decorator', {
 
         el.addEventListener('mouseover', model.onMouseEnter)
         el.addEventListener('mouseout', model.onMouseLeave)
+        el.addEventListener('click', model.onClick)
     },
     unbind (el: DragEl) {
         if (Object.hasOwnProperty.call(el, '__drag_wrapper')) {
             const model = el.__dragWrapper as ComponentModel
             el.removeEventListener('mouseover', model.onMouseEnter)
             el.removeEventListener('mouseout', model.onMouseLeave)
+            el.removeEventListener('click', model.onClick)
         }
     }
 })

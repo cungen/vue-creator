@@ -113,7 +113,6 @@ export default Vue.extend({
     },
     mounted () {
         if (this.$refs.component) {
-            console.log(this.$refs.component._props, this.component)
             const propKeys = ['default', ...Object.keys(this.$refs.component._props || {})]
             this.checkSlotKey(propKeys).then(() => {
                 this.testingSlot = null
@@ -158,13 +157,4 @@ export default Vue.extend({
 })
 </script>
 <style lang="sass" scoped>
-$red: #f81d22
-$green: #42b983
-
-.component-wrapper
-    // border: 1px dotted rgba(#1890ff, 0.9)
-    &.c-active
-        // border-color: rgba($red, 0.9)
-        // outline: 1px solid rgba($red, 0.4)
-
 </style>

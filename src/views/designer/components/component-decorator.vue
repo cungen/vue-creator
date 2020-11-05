@@ -1,42 +1,54 @@
 <template lang="pug">
-.component-decorator(@mouseover='onMouseOver' @mouseout='onMouseOut' v-show='show')
-    .outline(:style='style.outline')
-    .opts(:style='style.opts')
+.component-decorator(@mouseover='onMouseOver' @mouseout='onMouseOut')
+    .outline(:style='style.outline' v-show='show')
+    .opts(:style='style.opts' v-show='show')
         a.op-item.danger(href='javascript:;' @click='onDelete')
             a-icon(type="delete")
+    .active(:style='style.active')
 
 </template>
 
 <script lang="ts">
 import Vue, { PropType } from 'vue'
 
-interface VueElement extends HTMLElement {
-    __vue__: Vue;
-}
-
 export default Vue.extend({
     props: {
-        relatedEle: Object as PropType<VueElement>
+        relatedNode: Object as PropType<Vue>,
+        clickNode: Object as PropType<Vue>
     },
     data () {
         return {
             show: false,
             style: {
                 outline: {},
-                opts: {}
+                opts: {},
+                active: {}
             },
             hideTimer: 0
         }
     },
     watch: {
-        relatedEle (ele: VueElement) {
-            if (ele) {
-                console.log(ele.__vue__)
+        relatedNode (node: Vue) {
+            if (node) {
                 this.show = true
-                this.updateStyle(ele)
+                this.updateStyle(node.$el as HTMLElement)
                 this.cancelHide()
             } else {
                 this.show = false
+            }
+        },
+        clickNode (node: Vue) {
+            if (node) {
+                const ele = node.$el as HTMLElement
+                const { left, top, width, height } = ele.getClientRects()[0]
+                this.style.active = {
+                    left: Number(left) - 2 + 'px',
+                    top: Number(top) - 2 + 'px',
+                    width: Number(width) + 4 + 'px',
+                    height: Number(height) + 4 + 'px'
+                }
+            } else {
+                this.style.active = {}
             }
         }
     },
@@ -58,8 +70,9 @@ export default Vue.extend({
             }
         },
         onDelete () {
-            const com = this.relatedEle.__vue__
-            com.$emit('delete')
+            this.show = false
+            this.relatedNode.$emit('delete')
+            this.style.active = {}
         },
         cancelHide () {
             if (this.hideTimer) {
@@ -71,7 +84,7 @@ export default Vue.extend({
             this.cancelHide()
             this.hideTimer = setTimeout(() => {
                 this.show = false
-                this.$props.relatedEle = null
+                this.$props.relatedNode = null
             }, 400)
         },
         onMouseOver () {
@@ -86,12 +99,14 @@ export default Vue.extend({
 
 <style lang="sass" scoped>
 .component-decorator
-    .outline
+    .outline, .active
         position: fixed
         z-index: 10000
         border-radius: 2px
         border: 1px solid rgba(#1890ff, 0.7)
         pointer-events: none
+    .active
+        border-color: rgba(#f81d22, 0.5)
 
     .opts
         position: fixed

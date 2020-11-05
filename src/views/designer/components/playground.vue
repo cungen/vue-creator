@@ -46,6 +46,7 @@ export default Vue.extend({
 <style lang="sass" scoped>
 
 .playground
+    height: 100%
     padding: 20px
 .component-wrapper
     margin-bottom: 8px
