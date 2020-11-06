@@ -1,12 +1,12 @@
 <template lang="pug">
 .component-props
-    .c-name(v-if='activeComponent') {{activeComponent.$options._componentTag}}
+    .c-name(v-if='activeComponent') 属性设置 - {{activeComponent.$options._componentTag}}
     template(v-for='prop in props')
         .prop-item
             .p-name {{prop.name}}
                 span.required(v-if='prop.required') *
                 span.p-info(v-if='typeof prop.default !== "undefined"') ({{prop.default}})
-            a-row(v-if='prop.type')
+            //- a-row(v-if='prop.type')
                 a-col.p-label(:span='6') 类型：
                 a-col(:span='18')
                     template(v-if='isArray(prop.type)')

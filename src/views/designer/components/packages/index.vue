@@ -1,26 +1,29 @@
 <template lang="pug">
-a-collapse.packages(:bordered='false')
+a-collapse.packages(:bordered='false' expand-icon-position="right")
     a-collapse-panel(v-for='p in packages' :key="p.name" :header="p.name")
         template(v-for='c in p.children')
-            .c-item(
-                v-drag='{ dragStart: onDragStart, dragEnd: onDragEnd, transferData: c }'
-                @dblclick='handleDblClick(c)'
-            ) {{c.name}}
-            .c-item-children(v-if='c.children && c.children.length')
+            .c-section(v-if='c.children && c.children.length')
+                .c-section-name # {{c.name}}
                 .c-item(
                     v-for='sub in c.children'
                     :key='sub.name'
                     v-drag='{ dragStart: onDragStart, dragEnd: onDragEnd, transferData: sub }'
                     @dblclick='handleDblClick(sub)'
                 ) {{sub.name}}
+            .c-section(v-else)
+                .c-item(
+                    v-drag='{ dragStart: onDragStart, dragEnd: onDragEnd, transferData: c }'
+                    @dblclick='handleDblClick(c)'
+                ) {{c.name}}
 </template>
 <script lang="ts">
 import Vue from 'vue'
 import * as AntComponents from 'ant-design-vue'
 // import * as ElementComponents from 'element-ui'
 // import * as Vuetify from 'vuetify/es5/components/index'
-import { DRAG, DESIGNER } from '../../../store/types'
-import { Drag } from '../directives/drag-drop'
+import { DRAG, DESIGNER } from '../../../../store/types'
+import { Drag } from '../../directives/drag-drop'
+import AntPackages from './packages-ant'
 
 Vue.component('CgText', {
     name: 'CgText',
@@ -62,37 +65,7 @@ function getElementPackage () {
         children: list
     }
 }
-*/
 
-function getAntPackage () {
-    const ants = [{
-        name: AntComponents.Button.name,
-        defaultProps: {
-            type: 'primary'
-        },
-        slots: ['default']
-    }]
-    // for (const i in AntComponents) {
-    //     const c = AntComponents[i as keyof typeof AntComponents]
-    //     if (c && Object.hasOwnProperty.call(c, 'name') && Object.hasOwnProperty.call(c, 'install')) {
-    //         ants.push(c)
-    //         const children = [] as Array<typeof c>
-    //         for (const key in c) {
-    //             const sub = c[key as keyof typeof c]
-    //             if (Object.hasOwnProperty.call(sub, 'render') && Object.hasOwnProperty.call(sub, 'name')) {
-    //                 children.push(sub)
-    //             }
-    //         }
-    //         Object.assign(c, { children: children })
-    //     }
-    // }
-    return {
-        name: 'Ant Design',
-        children: ants
-    }
-}
-
-/*
 function getVuetifyPackage () {
     const list = []
     for (const i in Vuetify) {
@@ -149,7 +122,7 @@ export default Vue.extend({
             getLayoutPackage(),
             // getVuetifyPackage(),
             // getElementPackage(),
-            getAntPackage(),
+            AntPackages,
             getOtherPackage()
         ]
 
@@ -174,10 +147,14 @@ export default Vue.extend({
 })
 </script>
 <style lang="sass" scoped>
+.packages
+    &::v-deep
+        .ant-collapse-content-box
+            padding-bottom: 8px
 .c-item
     display: inline-block
-    height: 28px
-    line-height: 28px
+    height: 24px
+    line-height: 24px
     border: 1px solid #e4e4e4
     background: #fff
     border-radius: 4px
@@ -186,13 +163,10 @@ export default Vue.extend({
     margin-bottom: 6px
     cursor: move
 
-.c-item-children
-    border: 1px dashed #ddd
-    border-radius: 2px
-    padding: 6px 6px 0
-    margin-bottom: 6px
-    font-size: 0.85em
-    .c-item
-        height: 24px
-        line-height: 24px
+.c-section-name
+    color: #999
+    font-style: italic
+    margin-bottom: 8px
+    font-size: 1.1em
+
 </style>

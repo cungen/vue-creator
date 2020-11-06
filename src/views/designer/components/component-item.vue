@@ -8,7 +8,7 @@ component.component-wrapper(
     v-component-decorator
 )
     // 用来测试是否存在相关slot
-    //- template(v-if='testingSlot' v-slot:[testingSlot])
+    template(v-if='testingSlot' v-slot:[testingSlot])
         component.slot-test(
             v-if='hasChildren'
             :is='component.children[0].name'
@@ -17,11 +17,14 @@ component.component-wrapper(
 
     // slot内容
     template(v-for='slot in slots' v-slot:[slot])
-        //- template(v-if='slot==="default" && (!slotComponents[slot] || !slotComponents[slot].length)')
+        //- template(v-if='childLimit')
             component(
-                v-if='hasChildren'
-                :is='component.children[0].name'
-                ) {{component.name}}
+                v-for='(child, i) in slotComponents[slot]'
+                v-bind='child.defaultProps || {}'
+                :key='child._id'
+                :is='child.name'
+                ) {{child.name}}
+        //- template(v-else)
         component-item(
             v-for='(child, i) in slotComponents[slot]'
             :key='child._id'
@@ -94,7 +97,15 @@ export default Vue.extend({
                 span: 'span', table: 'tr', tr: 'td', ol: 'li', ul: 'li', dl: 'dd', button: 'div'
 
             }
-            return childMap[parentTag] || 'div'
+            if (childMap[parentTag]) {
+                return childMap[parentTag]
+            } else if (this.childLimit) {
+                return this.getComponentTag(this.component.children[0].name) || 'div'
+            }
+            return 'div'
+        },
+        childLimit () {
+            return Boolean(this.component.children && this.component.children.length)
         }
     },
     beforeDestroy () {
@@ -123,15 +134,27 @@ export default Vue.extend({
     mounted () {
         if (this.$refs.component) {
             this.slots = this.component.slots || []
-            // const propKeys = ['default', ...Object.keys(this.$refs.component._props || {})]
-            // this.checkSlotKey(propKeys).then(() => {
-            //     this.testingSlot = null
-            // })
+            // 限定了子内容节点
+            if (this.childLimit) {
+                console.log(this.getComponentTag(this.component.children[0].name))
+                this.slots = ['default']
+                this.onDrop('default', this.component.children[0])
+            } else if (this.slots.indexOf('default') === -1 && !this.component.noSlot) {
+                const propKeys = ['default']
+                this.checkSlotKey(propKeys).then(() => {
+                    this.testingSlot = null
+                })
+            }
             this.refComponent = this.$refs.component
         }
         this.props = this.component.defaultProps || {}
     },
     methods: {
+        getComponentTag (name) {
+            const com = new Vue({ render (h) { return h(name, 'null') } })
+            com.$mount()
+            return com.$el.nodeName.toLowerCase()
+        },
         checkSlotKey (keys) {
             if (!keys.length) {
                 return Promise.resolve()
@@ -148,12 +171,12 @@ export default Vue.extend({
                 })
             })
         },
-        onDrop (slotName) {
+        onDrop (slotName, playLoad) {
             if (!this.slotComponents[slotName]) {
                 this.$set(this.slotComponents, slotName, [])
             }
             this.slotComponents[slotName].push({
-                ...this.dragPayload,
+                ...(playLoad || this.dragPayload),
                 _id: Date.now()
             })
             this.$store.commit(DRAG.END)

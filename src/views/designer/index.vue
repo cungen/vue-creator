@@ -10,7 +10,7 @@
 </template>
 
 <script>
-import Packages from './components/packages.vue'
+import Packages from './components/packages/index.vue'
 import Playground from './components/playground.vue'
 import ComponentProps from './components/component-props.vue'
 

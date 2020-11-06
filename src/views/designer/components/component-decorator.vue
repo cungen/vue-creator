@@ -37,19 +37,11 @@ export default Vue.extend({
                 this.show = false
             }
         },
-        clickNode (node: Vue) {
-            if (node) {
-                const ele = node.$el as HTMLElement
-                const { left, top, width, height } = ele.getBoundingClientRect()
-                this.style.active = {
-                    left: Number(left) - 2 + 'px',
-                    top: Number(top) - 2 + 'px',
-                    width: Number(width) + 4 + 'px',
-                    height: Number(height) + 4 + 'px'
-                }
-            } else {
-                this.style.active = {}
-            }
+        clickNode () {
+            this.updateActiveStyle()
+        },
+        'clickNode.props' () {
+            this.updateActiveStyle()
         }
     },
     mounted () {
@@ -67,6 +59,21 @@ export default Vue.extend({
             this.style.opts = {
                 left: Number(left + width) + 'px',
                 top: Number(top) + 'px'
+            }
+        },
+        updateActiveStyle () {
+            const node = this.clickNode
+            if (node) {
+                const ele = node.$el as HTMLElement
+                const { left, top, width, height } = ele.getBoundingClientRect()
+                this.style.active = {
+                    left: Number(left) - 2 + 'px',
+                    top: Number(top) - 2 + 'px',
+                    width: Number(width) + 4 + 'px',
+                    height: Number(height) + 4 + 'px'
+                }
+            } else {
+                this.style.active = {}
             }
         },
         onDelete () {
