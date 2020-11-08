@@ -10,11 +10,12 @@ a-collapse.packages(:bordered='false' expand-icon-position="right")
                     v-drag='{ dragStart: onDragStart, dragEnd: onDragEnd, transferData: sub }'
                     @dblclick='handleDblClick(sub)'
                 ) {{sub.name}}
-            .c-section(v-else)
-                .c-item(
-                    v-drag='{ dragStart: onDragStart, dragEnd: onDragEnd, transferData: c }'
-                    @dblclick='handleDblClick(c)'
-                ) {{c.name}}
+
+            .c-item(
+                v-else
+                v-drag='{ dragStart: onDragStart, dragEnd: onDragEnd, transferData: c }'
+                @dblclick='handleDblClick(c)'
+            ) {{c.name}}
 </template>
 <script lang="ts">
 import Vue from 'vue'

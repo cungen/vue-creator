@@ -42,6 +42,7 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
         - [ ] [A]优化drop-area展示
             - [ ] drop-area也要调成directive
             - [ ] 优化面包屑中的drop的展示
+        - [ ] [A]hover时添加组件名称的标识
         - [ ] 父子组件依赖：只能拖动子组件到内部，在内部默认展示子组件作为slot
         - [ ] 激活热区，支持双击添加组件
         - [ ] 可以在拖动到组件上后，展示一个slot列表让选择添加到哪个slot中
