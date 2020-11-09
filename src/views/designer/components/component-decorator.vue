@@ -9,12 +9,12 @@
 </template>
 
 <script lang="ts">
-import Vue, { PropType } from 'vue'
+import Vue, { PropType, VNode } from 'vue'
 
 export default Vue.extend({
     props: {
-        relatedNode: Object as PropType<Vue>,
-        clickNode: Object as PropType<Vue>
+        relatedNode: Object as PropType<VNode>,
+        clickNode: Object as PropType<VNode>
     },
     data () {
         return {
@@ -28,10 +28,10 @@ export default Vue.extend({
         }
     },
     watch: {
-        relatedNode (node: Vue) {
+        relatedNode (node: VNode) {
             if (node) {
                 this.show = true
-                this.updateStyle(node.$el as HTMLElement)
+                this.updateStyle(node.elm as HTMLElement)
                 this.cancelHide()
             } else {
                 this.show = false
@@ -41,7 +41,16 @@ export default Vue.extend({
             this.updateActiveStyle()
         },
         'clickNode.props' () {
-            this.updateActiveStyle()
+            // wait for the element changed
+            this.$nextTick(() => {
+                if (this.relatedNode) {
+                    this.updateActiveStyle()
+                    this.updateStyle(this.relatedNode.elm as HTMLElement)
+                } else {
+                    this.hide()
+                    this.style.active = {}
+                }
+            })
         }
     },
     mounted () {
@@ -64,7 +73,7 @@ export default Vue.extend({
         updateActiveStyle () {
             const node = this.clickNode
             if (node) {
-                const ele = node.$el as HTMLElement
+                const ele = node.elm as HTMLElement
                 const { left, top, width, height } = ele.getBoundingClientRect()
                 this.style.active = {
                     left: Number(left) - 2 + 'px',
@@ -78,7 +87,8 @@ export default Vue.extend({
         },
         onDelete () {
             this.show = false
-            this.relatedNode.$emit('delete')
+            const context = this.relatedNode.context as Vue
+            context.$emit('delete')
             this.style.active = {}
         },
         cancelHide () {
@@ -98,7 +108,7 @@ export default Vue.extend({
             this.cancelHide()
         },
         onMouseOut (e: MouseEvent) {
-            if (this.relatedNode.$el.contains(e.relatedTarget as HTMLElement)) {
+            if (this.relatedNode.elm?.contains(e.relatedTarget as HTMLElement)) {
                 return
             }
             this.hide()

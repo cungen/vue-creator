@@ -17,14 +17,6 @@ component.component-wrapper(
 
     // slot内容
     template(v-for='slot in slots' v-slot:[slot])
-        //- template(v-if='childLimit')
-            component(
-                v-for='(child, i) in slotComponents[slot]'
-                v-bind='child.defaultProps || {}'
-                :key='child._id'
-                :is='child.name'
-                ) {{child.name}}
-        //- template(v-else)
         component-item(
             v-for='(child, i) in slotComponents[slot]'
             :key='child._id'
@@ -136,7 +128,6 @@ export default Vue.extend({
             this.slots = this.component.slots || []
             // 限定了子内容节点
             if (this.childLimit) {
-                console.log(this.getComponentTag(this.component.children[0].name))
                 this.slots = ['default']
                 this.onDrop('default', this.component.children[0])
             } else if (this.slots.indexOf('default') === -1 && !this.component.noSlot) {

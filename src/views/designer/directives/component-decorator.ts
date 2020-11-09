@@ -4,6 +4,7 @@ import ComponentDecorator from '../components/component-decorator.vue'
 
 let decorator = null as null|Vue
 let initialized = false
+let lastClickNode = null as null | VNode
 
 class ComponentModel {
     vnode: VNode
@@ -29,7 +30,7 @@ class ComponentModel {
     onMouseEnter = (e: MouseEvent) => {
         if (decorator) {
             Object.assign(decorator.$props, {
-                relatedNode: this.vnode.context
+                relatedNode: this.vnode
             })
         }
         e.stopPropagation()
@@ -44,24 +45,27 @@ class ComponentModel {
 
     onClick = () => {
         if (decorator) {
+            lastClickNode = this.vnode
             Object.assign(decorator.$props, {
-                clickNode: this.vnode.context
+                clickNode: this.vnode
             })
         }
     }
 }
 
-interface DragEl extends HTMLElement {
-    __dragWrapper?: ComponentModel;
+const MODEL_DATA_ATTR = '__dragWrapper'
+
+interface DecoratorEl extends HTMLElement {
+    [MODEL_DATA_ATTR]?: ComponentModel;
 }
 
 export default Vue.directive('component-decorator', {
-    bind (el: DragEl, binding, vnode: VNode) {
+    bind (el: DecoratorEl, binding, vnode: VNode) {
         const model = new ComponentModel(vnode)
 
-        if (!Object.hasOwnProperty.call(el, '__drag_wrapper')) {
+        if (!Object.hasOwnProperty.call(el, MODEL_DATA_ATTR)) {
             Object.assign(el, {
-                __dragWrapper: model
+                [MODEL_DATA_ATTR]: model
             })
         }
 
@@ -69,12 +73,19 @@ export default Vue.directive('component-decorator', {
         el.addEventListener('mouseout', model.onMouseLeave)
         el.addEventListener('click', model.onClick)
     },
-    unbind (el: DragEl) {
-        if (Object.hasOwnProperty.call(el, '__drag_wrapper')) {
-            const model = el.__dragWrapper as ComponentModel
+    unbind (el: DecoratorEl) {
+        if (Object.hasOwnProperty.call(el, MODEL_DATA_ATTR)) {
+            const model = el[MODEL_DATA_ATTR] as ComponentModel
             el.removeEventListener('mouseover', model.onMouseEnter)
             el.removeEventListener('mouseout', model.onMouseLeave)
             el.removeEventListener('click', model.onClick)
+
+            // clear click Node
+            if (lastClickNode === model.vnode && decorator) {
+                Object.assign(decorator.$props, {
+                    clickNode: null
+                })
+            }
         }
     }
 })

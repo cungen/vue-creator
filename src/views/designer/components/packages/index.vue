@@ -25,22 +25,9 @@ import * as AntComponents from 'ant-design-vue'
 import { DRAG, DESIGNER } from '../../../../store/types'
 import { Drag } from '../../directives/drag-drop'
 import AntPackages from './packages-ant'
+import CgText from '../cg/text.vue'
 
-Vue.component('CgText', {
-    name: 'CgText',
-    props: {
-        tag: {
-            type: String,
-            default: 'div'
-        },
-        text: {
-            type: String
-        }
-    },
-    render (h) {
-        return h(this.tag, this.text || 'text placeholder')
-    }
-})
+Vue.component('CgText', CgText)
 
 /*
 function getElementPackage () {

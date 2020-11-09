@@ -31,24 +31,24 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
         - [x] 父子组件关系
         - [x] 支持配置默认属性
         - [x] 添加2级分组
+        - [x] CgText在mounted中添加tag判断
+        - [ ] dropdown添加展示参数可更改链接或按钮类型
         - [ ] 添加自定义布局组件
         - [ ] 测试完善功能组件
-        - [ ] CgText在mounted中添加tag判断
     - [ ] playground
         - [x] 组件线框实现方式重构
         - [x] drop-area怎么作为有限制的子组件
         - [x] [A]调整操作的展示位置，使其不影响组件展示
         - [x] hover的时候才展示线框
-        - [ ] [A]优化drop-area展示
-            - [ ] drop-area也要调成directive
-            - [ ] 优化面包屑中的drop的展示
+        - [x] 父子组件依赖：只能拖动子组件到内部，在内部默认展示子组件作为slot
+        - [x] [A]优化drop-area展示
+            - [x] 优化面包屑中的drop的展示
         - [ ] [A]hover时添加组件名称的标识
-        - [ ] 父子组件依赖：只能拖动子组件到内部，在内部默认展示子组件作为slot
         - [ ] 激活热区，支持双击添加组件
         - [ ] 可以在拖动到组件上后，展示一个slot列表让选择添加到哪个slot中
-    - [ ] 属性编辑器
+    - [x] 属性编辑器
         - [x] 属性还原
-        - [ ] 对有validator的属性添加验证，通过验证的才赋值给组件
+        - [x] 对有validator的属性添加验证，通过验证的才赋值给组件
 
     - [ ] code生成
 

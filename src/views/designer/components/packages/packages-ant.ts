@@ -1,4 +1,9 @@
 import * as Ant from 'ant-design-vue'
+import Vue, { VNode } from 'vue'
+
+function rename (name: string) {
+    return name + '_'
+}
 
 export default {
     name: 'Ant Design',
@@ -32,7 +37,45 @@ export default {
             },
             {
                 name: Ant.Breadcrumb.Item.name
+            }, {
+                name: Ant.Dropdown.name + '_'
             }
         ]
     }]
 }
+
+Vue.component(rename(Ant.Dropdown.name), {
+    name: rename(Ant.Dropdown.name),
+    props: {
+        placeholder: {
+            type: String,
+            default: 'Hover me'
+        },
+        isButton: Boolean
+    },
+    render (h): VNode {
+        return h(Ant.Dropdown.name, [
+            h(this.isButton ? 'a-button' : 'a', {
+                class: ['ant-dropdown-link'],
+                attrs: {
+                    href: 'javascript:;'
+                }
+            }, [this.placeholder, h('a-icon', {
+                attrs: {
+                    type: 'down'
+                }
+            })]),
+            h('a-menu', {
+                slot: 'overlay'
+            }, new Array(3).fill(0).map((item, i) => {
+                return h('a-menu-item', [
+                    h('a', {
+                        attrs: {
+                            href: 'javascript:;'
+                        }
+                    }, 'menu ' + i)
+                ])
+            }))
+        ])
+    }
+})
