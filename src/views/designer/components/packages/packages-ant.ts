@@ -35,11 +35,15 @@ export default {
                 name: Ant.Breadcrumb.name,
                 children: [Ant.Breadcrumb.Item]
             },
+            { name: Ant.Breadcrumb.Item.name },
+            { name: rename(Ant.Dropdown.name) },
             {
-                name: Ant.Breadcrumb.Item.name
-            }, {
-                name: Ant.Dropdown.name + '_'
-            }
+                name: Ant.Menu.name,
+                children: [Ant.Menu.Item],
+                defaultProps: {
+                    mode: 'horizontal'
+                }
+            }, Ant.Menu.Item, Ant.Menu.ItemGroup, Ant.Menu.SubMenu
         ]
     }]
 }

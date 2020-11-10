@@ -5,7 +5,7 @@ component.component-wrapper(
     v-bind='props'
     @click.native.stop='onClick'
     :class='{"c-active": isActive}'
-    v-component-decorator
+    v-component-decorator='{ slots: slots, onDrop }'
 )
     // 用来测试是否存在相关slot
     template(v-if='testingSlot' v-slot:[testingSlot])
@@ -23,13 +23,8 @@ component.component-wrapper(
             :component='child'
             @delete='onChildDelete(slotComponents[slot], i)')
 
-        drop-area(
-            v-if='dragging || slot==="default" && (!slotComponents[slot] || !slotComponents[slot].length)'
-            ref='slot'
-            :tag='dropTag'
-            :placeholder='"#" + slot'
-            @drop='onDrop(slot)'
-        )
+        template(v-if='slot==="default" && (!slotComponents[slot] || !slotComponents[slot].length)') {{component.name}}
+
 </template>
 <script>
 import Vue from 'vue'

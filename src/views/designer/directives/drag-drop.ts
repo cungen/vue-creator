@@ -59,25 +59,25 @@ export const Drop = Vue.directive('drop', {
         const data = {
             drop (e: DragEvent) {
                 if (binding.value.drop) {
-                    binding.value.drop()
+                    binding.value.drop(e)
                 }
                 e.preventDefault()
             },
             dragEnter (e: DragEvent) {
                 if (binding.value.dragEnter) {
-                    binding.value.dragEnter()
+                    binding.value.dragEnter(e)
                 }
                 e.preventDefault()
             },
             dragLeave (e: DragEvent) {
                 if (binding.value.dragLeave) {
-                    binding.value.dragLeave()
+                    binding.value.dragLeave(e)
                 }
                 e.preventDefault()
             },
             dragOver (e: DragEvent) {
                 if (binding.value.dragOver) {
-                    binding.value.dragOver()
+                    binding.value.dragOver(e)
                 }
                 e.preventDefault()
             }
