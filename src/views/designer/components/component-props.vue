@@ -3,9 +3,6 @@
     .c-name(v-if='activeComponent') 属性设置 - {{activeComponent.$options._componentTag}}
     template(v-for='prop in props')
         .prop-item
-            .p-name {{prop.name}}
-                span.required(v-if='prop.required') *
-                span.p-info(v-if='typeof prop.default !== "undefined"') ({{prop.default}})
             //- a-row(v-if='prop.type')
                 a-col.p-label(:span='6') 类型：
                 a-col(:span='18')
@@ -14,8 +11,11 @@
                     template(v-else)
                         span.value {{prop.type.name}}
             a-row.p-form
-                a-col.p-label(:span='6') 内容：
-                a-col(:span='18')
+                a-col.p-label(:span='7')
+                    .p-name {{prop.name}}
+                        span.required(v-if='prop.required') *
+                        //- span.p-info(v-if='typeof prop.default !== "undefined"') ({{prop.default}})
+                a-col(:span='17')
                     template(v-if='prop.showType === "string"')
                         a-input(size='small' v-model='prop.value' @change='onPropChange(prop)')
                     template(v-else-if='prop.showType === "number"')
@@ -167,7 +167,7 @@ export default Vue.extend({
         right: 0
         bottom: 0
         height: 1px
-        background: #e0e0e0
+        background: #eaeaea
     &:last-of-type:after
         display: none
 

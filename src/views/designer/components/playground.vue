@@ -9,9 +9,10 @@
 <script lang="ts">
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
-import { DRAG } from '../../../store/types'
+import { DRAG, DESIGNER } from '../../../store/types'
 import ComponentItem from './component-item.vue'
 import DropArea from './drop-area.vue'
+import { initDecorator } from '../directives/component-decorator'
 
 export default Vue.extend({
     components: {
@@ -20,21 +21,35 @@ export default Vue.extend({
     },
     computed: {
         ...mapGetters([
-            'dragPayload'
+            'dragPayload',
+            'activeDbl'
         ])
+    },
+    watch: {
+        activeDbl (now) {
+            if (now) {
+                this.addChild(now)
+                this.$store.commit(DESIGNER.DOUBLE_CLICK, null)
+            }
+        }
     },
     data () {
         return {
             children: [] as DragPayload[]
         }
     },
+    mounted () {
+        initDecorator()
+    },
     methods: {
         onDrop () {
             this.$store.commit(DRAG.END)
-            this.children.push({
-                ...this.dragPayload,
+            this.addChild(this.dragPayload)
+        },
+        addChild (child: DragPayload) {
+            this.children.push(Object.assign({}, child, {
                 _id: Date.now()
-            })
+            }))
         },
         onDelete (index: number) {
             this.children.splice(index, 1)

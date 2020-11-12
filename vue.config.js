@@ -1,6 +1,7 @@
 module.exports = {
     lintOnSave: true,
-    publicPath: './',
+    publicPath: './'
+    /*
     configureWebpack: {
         rules: [{
             test: /\.s(c|a)ss$/,
@@ -36,4 +37,5 @@ module.exports = {
             // },
         }
     }
+    */
 }

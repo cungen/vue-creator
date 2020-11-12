@@ -19,16 +19,19 @@
 </template>
 
 <script lang="ts">
-import Vue, { PropType, VNode } from 'vue'
+import Vue, { PropType } from 'vue'
 import { Drop } from '../directives/drag-drop'
+import store from '../../../store'
+
+interface ComponentItem extends Vue {
+    slots: string[];
+}
 
 export default Vue.extend({
     props: {
-        relatedNode: Object as PropType<VNode>,
-        clickNode: Object as PropType<VNode>,
-        dragging: Boolean,
-        slots: Array as PropType<string[]>,
-        onDrop: Function
+        relatedNode: Object as PropType<ComponentItem>,
+        clickNode: Object as PropType<ComponentItem>,
+        dragging: Boolean
     },
     directives: { Drop },
     data () {
@@ -45,14 +48,20 @@ export default Vue.extend({
     },
     computed: {
         componentName () {
-            return this.relatedNode?.componentOptions?.tag || ''
+            return (this.relatedNode && this.relatedNode.$vnode.componentOptions && this.relatedNode.$vnode.componentOptions.tag) || ''
+        },
+        slots () {
+            if (this.relatedNode) {
+                return this.relatedNode.slots || []
+            }
+            return []
         }
     },
     watch: {
-        relatedNode (node: VNode) {
+        relatedNode (node: Vue) {
             if (node) {
                 this.show = true
-                this.updateStyle(node.elm as HTMLElement)
+                this.updateStyle(node.$vnode.elm as HTMLElement)
                 this.cancelHide()
             } else {
                 this.show = false
@@ -60,22 +69,23 @@ export default Vue.extend({
         },
         clickNode () {
             this.updateActiveStyle()
-        },
-        'clickNode.props' () {
-            // wait for the element changed
-            this.$nextTick(() => {
-                if (this.relatedNode) {
-                    this.updateActiveStyle()
-                    this.updateStyle(this.relatedNode.elm as HTMLElement)
-                } else {
-                    this.hide()
-                    this.style.active = {}
-                }
-            })
         }
     },
     mounted () {
         this.$on('hide', this.hide)
+        // watch props change
+        this.$watch(() => {
+            return store.getters.activeProps
+        }, () => {
+            if (this.clickNode === store.getters.activeComponent.$vnode.context) {
+                this.$nextTick(() => {
+                    this.updateActiveStyle()
+                })
+            } else {
+                this.hide()
+                this.style.active = {}
+            }
+        })
     },
     methods: {
         updateStyle (ele: HTMLElement) {
@@ -94,7 +104,7 @@ export default Vue.extend({
         updateActiveStyle () {
             const node = this.clickNode
             if (node) {
-                const ele = node.elm as HTMLElement
+                const ele = node.$vnode.elm as HTMLElement
                 const { left, top, width, height } = ele.getBoundingClientRect()
                 this.style.active = {
                     left: Number(left) - 2 + 'px',
@@ -108,8 +118,7 @@ export default Vue.extend({
         },
         onDelete () {
             this.show = false
-            const context = this.relatedNode.context as Vue
-            context.$emit('delete')
+            this.relatedNode.$emit('delete')
             this.style.active = {}
         },
         cancelHide () {
@@ -155,9 +164,7 @@ export default Vue.extend({
             this.hide()
         },
         onSlotDrop (slot: string) {
-            if (this.onDrop) {
-                this.onDrop(slot || this.slots[0])
-            }
+            this.relatedNode.$emit('drop', slot || this.slots[0])
             this.$props.relatedNode = null
             this.show = false
         }

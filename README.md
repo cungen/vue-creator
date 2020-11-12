@@ -44,9 +44,11 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
         - [x] [A]优化drop-area展示
             - [x] 优化面包屑中的drop的展示
             - [x] drop-area也要改成directive，拖放时不影响原组件布局及展示
+            - [ ] 添加全局drag事件代理，优化逻辑
+        - [x] [A] 激活热区，支持双击添加组件（只支持append到最后一个）
         - [ ] [A]hover时添加组件名称的标识
-        - [ ] 激活热区，支持双击添加组件
         - [ ] 可以在拖动到组件上后，展示一个slot列表让选择添加到哪个slot中
+
     - [x] 属性编辑器
         - [x] 属性还原
         - [x] 对有validator的属性添加验证，通过验证的才赋值给组件

@@ -2,6 +2,7 @@
 import Vue, { VNode } from 'vue'
 import { mapGetters } from 'vuex'
 import { Drop } from '../directives/drag-drop'
+import { DESIGNER } from '../../../store/types'
 
 export default Vue.extend({
     props: {
@@ -18,8 +19,13 @@ export default Vue.extend({
     },
     computed: {
         ...mapGetters([
-            'dragging'
-        ])
+            'dragging',
+            'focusDrop',
+            'activeDbl'
+        ]),
+        isFocus (): boolean {
+            return this.focusDrop === this
+        }
     },
     directives: {
         drop: Drop
@@ -38,7 +44,13 @@ export default Vue.extend({
             class: {
                 'drop-area': true,
                 active: this.active,
-                dragging: this.dragging
+                dragging: this.dragging,
+                focusing: this.isFocus
+            },
+            on: {
+                focus: () => {
+                    this.$store.commit(DESIGNER.FOCUS, this)
+                }
             },
             directives: [{
                 name: 'drop',
@@ -65,7 +77,7 @@ $green: #42b983
     color: #999
     text-align: center
     border: 1px dotted rgba($green, 0.8)
-    &:focus
+    &:focus, &.focusing
         border: 1px dotted rgba($red, 0.8)
         outline: 0
     &.dragging

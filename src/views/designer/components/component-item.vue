@@ -3,9 +3,9 @@ component.component-wrapper(
     :is='component.name'
     ref='component'
     v-bind='props'
-    @click.native.stop='onClick'
+    @click.native='onClick'
     :class='{"c-active": isActive}'
-    v-component-decorator='{ slots: slots, onDrop }'
+    data-decorator
 )
     // 用来测试是否存在相关slot
     template(v-if='testingSlot' v-slot:[testingSlot])
@@ -30,7 +30,6 @@ component.component-wrapper(
 import Vue from 'vue'
 import { mapGetters } from 'vuex'
 import { DRAG, DESIGNER } from '../../../store/types'
-import ComponentDecorator from '../directives/component-decorator'
 import { Drop } from '../directives/drag-drop'
 import DropArea from './drop-area.vue'
 
@@ -47,7 +46,6 @@ export default Vue.extend({
         DropArea
     },
     directives: {
-        ComponentDecorator,
         Drop
     },
     data () {
@@ -55,7 +53,6 @@ export default Vue.extend({
             children: [],
             slots: [],
             slotComponents: {},
-            activeSlotId: '',
             testingSlot: null,
             refComponent: null,
             props: {}
@@ -66,8 +63,7 @@ export default Vue.extend({
             'dragging',
             'dragPayload',
             'activeComponent',
-            'activeProps',
-            'activeDbl'
+            'activeProps'
         ]),
         isActive () {
             return this.activeComponent === this.refComponent
@@ -110,13 +106,12 @@ export default Vue.extend({
                     }
                 })
                 this.props = props
-            }
-        },
-        activeDbl (now) {
-            if (this.isFocus) {
-                console.log(now)
+                this.$el._cgContext = this
             }
         }
+    },
+    updated () {
+        this.refComponent.$vnode.elm._cgContext = this
     },
     mounted () {
         if (this.$refs.component) {
@@ -134,6 +129,10 @@ export default Vue.extend({
             this.refComponent = this.$refs.component
         }
         this.props = this.component.defaultProps || {}
+        Object.assign(this.$el, {
+            _cgContext: this
+        })
+        this.$on('drop', this.onDrop)
     },
     methods: {
         getComponentTag (name) {

@@ -4,7 +4,8 @@ import { PropType, Component } from 'vue'
 const allState = {
     activeComponent: null as null | PropType<Component>,
     activeProps: [] as Array<Prop>,
-    activeDbl: null as null | DragPayload
+    activeDbl: null as null | DragPayload,
+    focusDrop: null as null | Vue
 }
 
 export default {
@@ -12,7 +13,8 @@ export default {
     getters: {
         activeComponent: (state: typeof allState) => state.activeComponent,
         activeProps: (state: typeof allState) => state.activeProps,
-        activeDbl: (state: typeof allState) => state.activeDbl
+        activeDbl: (state: typeof allState) => state.activeDbl,
+        focusDrop: (state: typeof allState) => state.focusDrop
     },
     mutations: {
         [DESIGNER.ACTIVATE] (state: typeof allState, payload: PropType<Component>) {
@@ -21,8 +23,11 @@ export default {
         [DESIGNER.PROP_CHANGE] (state: typeof allState, payload: Array<Prop>) {
             state.activeProps = payload
         },
-        [DESIGNER.DOUBLE_CLICK] (state: typeof allState, payload: DragPayload) {
+        [DESIGNER.DOUBLE_CLICK] (state: typeof allState, payload: DragPayload|null) {
             state.activeDbl = payload
+        },
+        [DESIGNER.FOCUS] (state: typeof allState, payload: Vue) {
+            state.focusDrop = payload
         }
     }
 }

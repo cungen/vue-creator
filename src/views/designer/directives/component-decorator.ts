@@ -1,123 +1,87 @@
 import Vue from 'vue'
-import { VNode } from 'vue/types/umd'
 import ComponentDecorator from '../components/component-decorator.vue'
+import _ from 'lodash'
 
-let decorator = null as null|Vue
-let initialized = false
-let lastClickNode = null as null | VNode
+interface VueHtmlElement extends HTMLElement {
+    __vue__: Vue;
+    _cgContext: Vue;
+}
 
-class ComponentModel {
-    vnode: VNode
-    slots: Array<string>
-    onDrop: Function
+let decoratorModel = null as null|DecoratorModel
 
-    constructor (vnode: VNode, slots: Array<string>, onDrop: Function) {
-        this.vnode = vnode
-        this.slots = slots
-        this.onDrop = onDrop
-        this.init()
+class DecoratorModel {
+    decorator: Vue
+    domClass = '.component-decorator'
+    marker = 'data-decorator'
+
+    constructor () {
+        this.decorator = new Vue()
+        this.initComponent()
+        this.initEvents()
     }
 
-    init () {
-        if (!initialized) {
-            initialized = true
-            let ele = document.querySelector('.component-decorator')
-            if (!ele) {
-                ele = document.createElement('div')
-                document.body.appendChild(ele)
-            }
-            decorator = new Vue(Object.assign(ComponentDecorator))
-            decorator.$mount(ele)
+    initComponent () {
+        let ele = document.querySelector(this.domClass)
+        if (!ele) {
+            ele = document.createElement('div')
+            document.body.appendChild(ele)
         }
+        this.decorator = new Vue(ComponentDecorator)
+        this.decorator.$mount(ele)
     }
 
-    onMouseEnter = (e: MouseEvent) => {
-        if (decorator) {
-            Object.assign(decorator.$props, {
+    initEvents () {
+        window.addEventListener('mousemove', this.onMouseMove)
+        window.addEventListener('dragover', this.onDragOver)
+        window.addEventListener('click', this.onClick)
+    }
+
+    getNodeContext (ele: EventTarget|null): Vue|null {
+        if (ele) {
+            const wrapper = (ele as HTMLElement).closest(`[${this.marker}]`) as VueHtmlElement
+            return wrapper?._cgContext
+        }
+        return null
+    }
+
+    onMouseMove = _.throttle((e: MouseEvent) => {
+        const node = this.getNodeContext(e.target)
+        if (node) {
+            Object.assign(this.decorator.$props, {
                 dragging: false,
-                relatedNode: { ...this.vnode }
+                relatedNode: node
             })
+        } else {
+            this.decorator.$emit('hide')
         }
-        e.stopPropagation()
-    }
+    }, 300, { trailing: true })
 
-    onMouseLeave = (e: MouseEvent) => {
-        if (decorator) {
-            decorator.$emit('hide')
-        }
-        e.stopPropagation()
-    }
-
-    onClick = () => {
-        if (decorator) {
-            lastClickNode = this.vnode
-            Object.assign(decorator.$props, {
-                clickNode: this.vnode
-            })
-        }
-    }
-
-    dragEnter = () => {
-        if (this.slots.length) {
-            Object.assign(decorator?.$props, {
+    onDragOver = (e: DragEvent) => {
+        const node = this.getNodeContext(e.target)
+        if (node) {
+            Object.assign(this.decorator.$props, {
                 dragging: true,
-                slots: this.slots,
-                relatedNode: { ...this.vnode },
-                onDrop: this.onDrop
+                relatedNode: node
             })
+        } else {
+            this.decorator.$emit('hide')
         }
+        e.preventDefault()
     }
 
-    dragLeave = () => {
-        if (decorator) {
-            decorator.$emit('hide')
+    onClick = (e: Event) => {
+        const node = this.getNodeContext(e.target)
+        if (node) {
+            Object.assign(this.decorator.$props, {
+                clickNode: node
+            })
         }
     }
 }
 
-const MODEL_DATA_ATTR = '__dragWrapper'
-
-interface DecoratorEl extends HTMLElement {
-    [MODEL_DATA_ATTR]?: ComponentModel;
-}
-
-export default Vue.directive('component-decorator', {
-    bind (el: DecoratorEl, binding, vnode: VNode) {
-        const model = new ComponentModel(vnode, binding.value.slots || [], binding.value.onDrop)
-
-        if (!Object.hasOwnProperty.call(el, MODEL_DATA_ATTR)) {
-            Object.assign(el, {
-                [MODEL_DATA_ATTR]: model
-            })
-        }
-
-        el.addEventListener('mouseover', model.onMouseEnter)
-        el.addEventListener('mouseout', model.onMouseLeave)
-        el.addEventListener('click', model.onClick)
-        el.addEventListener('dragenter', model.dragEnter)
-        el.addEventListener('dragleave', model.dragLeave)
-    },
-    update (el: DecoratorEl, binding) {
-        if (Object.hasOwnProperty.call(el, MODEL_DATA_ATTR)) {
-            const model = el[MODEL_DATA_ATTR] as ComponentModel
-            model.slots = binding.value.slots || []
-        }
-    },
-    unbind (el: DecoratorEl) {
-        if (Object.hasOwnProperty.call(el, MODEL_DATA_ATTR)) {
-            const model = el[MODEL_DATA_ATTR] as ComponentModel
-            el.removeEventListener('mouseover', model.onMouseEnter)
-            el.removeEventListener('mouseout', model.onMouseLeave)
-            el.removeEventListener('click', model.onClick)
-            el.removeEventListener('dragenter', model.dragEnter)
-            el.removeEventListener('dragleave', model.dragLeave)
-
-            // clear click Node
-            if (lastClickNode === model.vnode && decorator) {
-                Object.assign(decorator.$props, {
-                    clickNode: null
-                })
-            }
-        }
+export function initDecorator () {
+    if (decoratorModel) {
+        return
     }
-})
+    decoratorModel = new DecoratorModel()
+}

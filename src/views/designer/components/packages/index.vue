@@ -1,5 +1,5 @@
 <template lang="pug">
-a-collapse.packages(:bordered='false' expand-icon-position="right")
+a-collapse.packages(:bordered='false' expand-icon-position="right" v-model='defaultOpen')
     a-collapse-panel(v-for='p in packages' :key="p.name" :header="p.name")
         template(v-for='c in p.children')
             .c-section(v-if='c.children && c.children.length')
@@ -115,7 +115,8 @@ export default Vue.extend({
         ]
 
         return {
-            packages
+            packages,
+            defaultOpen: [packages[1].name, packages[packages.length - 1].name]
         }
     },
     methods: {
@@ -137,6 +138,9 @@ export default Vue.extend({
 <style lang="sass" scoped>
 .packages
     &::v-deep
+        .ant-collapse, .ant-collapse-item
+            background: #fff
+            border-color: #f0f0f0
         .ant-collapse-content-box
             padding-bottom: 8px
 .c-item
