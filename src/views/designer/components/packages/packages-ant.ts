@@ -37,13 +37,19 @@ export default {
             },
             { name: Ant.Breadcrumb.Item.name },
             { name: rename(Ant.Dropdown.name) },
+            { name: rename(Ant.Menu.name) },
             {
-                name: Ant.Menu.name,
-                children: [Ant.Menu.Item],
-                defaultProps: {
-                    mode: 'horizontal'
-                }
-            }, Ant.Menu.Item, Ant.Menu.ItemGroup, Ant.Menu.SubMenu
+                name: Ant.PageHeader.name,
+                slots: ['default', 'title', 'subTitle', 'backIcon', 'extra', 'footer']
+            },
+            Ant.Pagination,
+            { name: rename(Ant.Steps.name) }
+        ]
+    }, {
+        name: 'Data Entry',
+        children: [
+            Ant.AutoComplete,
+            { name: rename(Ant.Cascader.name) }
         ]
     }]
 }
@@ -81,5 +87,85 @@ Vue.component(rename(Ant.Dropdown.name), {
                 ])
             }))
         ])
+    }
+})
+
+Vue.component(rename(Ant.Menu.name), {
+    name: rename(Ant.Dropdown.name),
+    props: {
+        isVertical: Boolean,
+        menus: String
+    },
+    data () {
+        return {
+            selected: ['0'] as string[]
+        }
+    },
+    render (h): VNode {
+        return h(Ant.Menu.name, {
+            attrs: {
+                mode: this.isVertical ? 'vertical' : 'horizontal'
+            },
+            props: {
+                defaultSelectedKeys: this.selected
+            }
+        }, (this.menus ? this.menus.split(',') : new Array(3).fill(0)).map((item, i) => {
+            return h('a-menu-item', {
+                attrs: {
+                    key: String(i)
+                }
+            }, i === 0 ? [h('a-icon', { attrs: { type: 'appstore' } }), item || 'menu ' + i] : [item || 'menu ' + i])
+        }))
+    }
+})
+
+Vue.component(rename(Ant.Steps.name), {
+    name: rename(Ant.Steps.name),
+    props: {
+        isVertical: Boolean,
+        steps: String,
+        isDot: Boolean,
+        current: {
+            type: Number,
+            default: 1
+        },
+        size: String,
+        status: String
+    },
+    render (h): VNode {
+        return h(Ant.Steps.name, {
+            attrs: {
+                direction: this.isVertical ? 'vertical' : 'horizontal',
+                size: this.size,
+                status: this.status,
+                'progress-dot': this.isDot
+            },
+            props: {
+                current: this.current
+            }
+        }, (this.steps ? this.steps.split(',') : new Array(3).fill(0)).map((item, i) => {
+            return h('a-step', {
+                attrs: {
+                    title: item || 'Title ' + i,
+                    description: 'description ' + i,
+                    subTitle: i === 1 ? '00:01:02' : ''
+                }
+            })
+        }))
+    }
+})
+
+Vue.component(rename(Ant.Cascader.name), {
+    name: rename(Ant.Cascader.name),
+    props: {
+        options: Object
+    },
+    render (h): VNode {
+        return h(Ant.Cascader.name, {
+            props: {
+                // eslint-disable-next-line
+                options: this.options || [{ value: 'zhejiang', label: 'Zhejiang', children: [{ value: 'hangzhou', label: 'Hangzhou', children: [{ value: 'xihu', label: 'West Lake' }]}]}, { value: 'jiangsu', label: 'Jiangsu', children: [{ value: 'nanjing', label: 'Nanjing', children: [{ value: 'zhonghuamen', label: 'Zhong Hua Men', }]}]}]
+            }
+        })
     }
 })

@@ -41,6 +41,8 @@ $right: 240px
         flex: 1 1 auto
         height: 100%
         overflow: auto
+        box-shadow: 1px 0 4px rgba(0,0,0,0.05)
+        z-index: 10
     .d-right
         flex: 0 0 $right
         height: 100%

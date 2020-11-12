@@ -1,5 +1,5 @@
 <template lang="pug">
-.component-decorator(@mouseover='onMouseOver' @mouseout='onMouseOut')
+.component-decorator(v-if='initialized' @mouseout='onMouseOut' @mousemove='onMouseMove' @dragover='onDragOver')
     .outline(:style='style.outline' v-show='show')
     .opts(ref='opts' :style='style.opts' v-show='show && !dragging')
         //- div(v-if='relatedNode && relatedNode.componentOptions') {{relatedNode.componentOptions.tag}}
@@ -8,13 +8,12 @@
     .active(:style='style.active')
     .slot-menus(ref='slots' v-show='show && dragging' :style='style.opts' v-drop='dropBinding()')
         .s-title {{componentName}}的slots
-        .s-item
-            .drop-area(
-                v-for='(slot, i) in slots'
-                :key='i'
-                :class='{"s-active": activeSlot===slot}'
-                v-drop='dropBinding(slot)'
-            ) &num;{{slot}}
+        .s-item.drop-area(
+            v-for='(slot, i) in slots'
+            :key='i'
+            :class='{"s-active": activeSlot===slot}'
+            v-drop='dropBinding(slot)'
+        ) &num;{{slot}}
 
 </template>
 
@@ -22,6 +21,7 @@
 import Vue, { PropType } from 'vue'
 import { Drop } from '../directives/drag-drop'
 import store from '../../../store'
+import _ from 'lodash'
 
 interface ComponentItem extends Vue {
     slots: string[];
@@ -30,7 +30,6 @@ interface ComponentItem extends Vue {
 export default Vue.extend({
     props: {
         relatedNode: Object as PropType<ComponentItem>,
-        clickNode: Object as PropType<ComponentItem>,
         dragging: Boolean
     },
     directives: { Drop },
@@ -42,8 +41,11 @@ export default Vue.extend({
                 opts: {},
                 active: {}
             },
-            hideTimer: 0,
-            activeSlot: ''
+            hideTimer: 0 as null|number,
+            activeSlot: '',
+            onMouseMove: null as null|Function,
+            initialized: false,
+            clickNode: null as null|ComponentItem
         }
     },
     computed: {
@@ -66,18 +68,27 @@ export default Vue.extend({
             } else {
                 this.show = false
             }
-        },
-        clickNode () {
-            this.updateActiveStyle()
         }
     },
     mounted () {
         this.$on('hide', this.hide)
+        // watch active component change
+        this.$watch(() => {
+            return store.getters.activeComponent
+        }, (now) => {
+            this.clickNode = now
+            if (now) {
+                this.updateActiveStyle()
+            } else {
+                this.hide()
+                this.style.active = {}
+            }
+        })
         // watch props change
         this.$watch(() => {
             return store.getters.activeProps
         }, () => {
-            if (this.clickNode === store.getters.activeComponent.$vnode.context) {
+            if (this.clickNode === store.getters.activeComponent) {
                 this.$nextTick(() => {
                     this.updateActiveStyle()
                 })
@@ -86,6 +97,8 @@ export default Vue.extend({
                 this.style.active = {}
             }
         })
+        this.onMouseMove = _.throttle(this.rawOnMouseMove, 300, { trailing: true })
+        this.initialized = true
     },
     methods: {
         updateStyle (ele: HTMLElement) {
@@ -124,14 +137,17 @@ export default Vue.extend({
         cancelHide () {
             if (this.hideTimer) {
                 clearTimeout(this.hideTimer)
-                this.hideTimer = 0
+                this.hideTimer = null
             }
         },
         hide () {
-            this.cancelHide()
+            if (this.hideTimer) {
+                return
+            }
             this.hideTimer = setTimeout(() => {
                 this.show = false
                 this.$props.relatedNode = null
+                this.hideTimer = null
             }, 400)
         },
         dropBinding (slot: string) {
@@ -154,14 +170,19 @@ export default Vue.extend({
                 }
             }
         },
-        onMouseOver () {
-            this.cancelHide()
-        },
         onMouseOut (e: MouseEvent) {
             if ((this.$refs.opts as HTMLElement).contains(e.relatedTarget as HTMLElement)) {
                 return
             }
             this.hide()
+        },
+        rawOnMouseMove (e: MouseEvent) {
+            this.cancelHide()
+            e.stopPropagation()
+        },
+        onDragOver (e: DragEvent) {
+            this.cancelHide()
+            e.stopPropagation()
         },
         onSlotDrop (slot: string) {
             this.relatedNode.$emit('drop', slot || this.slots[0])
@@ -208,25 +229,24 @@ $blue: #1890ff
         background: #fff
         border-radius: 4px
         border: 1px solid #f0f0f0
-        padding: 4px 0
+        padding: 4px 8px
         box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.05)
         .s-title
-            padding: 4px 8px 0
+            padding: 4px 0 0
+            margin-bottom: 4px
             color: #999
             font-size: 0.8em
-        .s-item
+        .drop-area
             position: relative
             padding: 4px 8px
             min-width: 120px
             font-size: 0.9em
-            line-height: 26px
             margin-bottom: 4px
-            .drop-area
-                color: #999
-                text-align: center
-                border: 1px dotted rgba($green, 0.8)
-            .s-active
-                border: 1px dotted rgba($red, 0.8)
-                background: rgba($red, 0.1)
+            color: #999
+            text-align: center
+            border: 1px dotted rgba($green, 0.8)
+        .s-active
+            border: 1px dotted rgba($red, 0.8)
+            background: rgba($red, 0.1)
 
 </style>

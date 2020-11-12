@@ -3,7 +3,7 @@ component.component-wrapper(
     :is='component.name'
     ref='component'
     v-bind='props'
-    @click.native='onClick'
+    @click.native.stop='onClick'
     :class='{"c-active": isActive}'
     data-decorator
 )

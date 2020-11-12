@@ -137,12 +137,17 @@ export default Vue.extend({
 </script>
 <style lang="sass" scoped>
 .packages
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03)
     &::v-deep
         .ant-collapse, .ant-collapse-item
             background: #fff
             border-color: #f0f0f0
+        .ant-collapse-item
+            &:last-of-type
+                border-bottom: 0
         .ant-collapse-content-box
             padding-bottom: 8px
+
 .c-item
     display: inline-block
     height: 24px

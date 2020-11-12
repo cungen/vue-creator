@@ -33,7 +33,6 @@ class DecoratorModel {
     initEvents () {
         window.addEventListener('mousemove', this.onMouseMove)
         window.addEventListener('dragover', this.onDragOver)
-        window.addEventListener('click', this.onClick)
     }
 
     getNodeContext (ele: EventTarget|null): Vue|null {
@@ -67,15 +66,6 @@ class DecoratorModel {
             this.decorator.$emit('hide')
         }
         e.preventDefault()
-    }
-
-    onClick = (e: Event) => {
-        const node = this.getNodeContext(e.target)
-        if (node) {
-            Object.assign(this.decorator.$props, {
-                clickNode: node
-            })
-        }
     }
 }
 
