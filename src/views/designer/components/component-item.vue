@@ -5,7 +5,6 @@ component.component-wrapper(
     v-bind='props'
     @click.native.stop='onClick'
     :class='{"c-active": isActive}'
-    data-decorator
 )
     // 用来测试是否存在相关slot
     template(v-if='testingSlot' v-slot:[testingSlot])
@@ -166,8 +165,10 @@ export default Vue.extend({
             })
             this.$store.commit(DRAG.END)
         },
-        onClick () {
+        onClick (e) {
             this.$store.commit(DESIGNER.ACTIVATE, this.$refs.component)
+            e.stopPropagation()
+            e.preventDefault()
         },
         onChildDelete (set, index) {
             set.splice(index, 1)

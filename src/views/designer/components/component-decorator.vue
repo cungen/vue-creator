@@ -1,19 +1,28 @@
 <template lang="pug">
 .component-decorator(v-if='initialized' @mouseout='onMouseOut' @mousemove='onMouseMove' @dragover='onDragOver')
-    .outline(:style='style.outline' v-show='show')
+    .outline(:style='style.outline' :class='{dragging: dragging}' v-show='show' v-drop='dropBinding()')
     .opts(ref='opts' :style='style.opts' v-show='show && !dragging')
         //- div(v-if='relatedNode && relatedNode.componentOptions') {{relatedNode.componentOptions.tag}}
         a.op-item.danger(href='javascript:;' @click='onDelete')
             a-icon(type="delete")
     .active(:style='style.active')
     .slot-menus(ref='slots' v-show='show && dragging' :style='style.opts' v-drop='dropBinding()')
-        .s-title {{componentName}}的slots
+        .s-title {{componentName || '当前组件'}}的slots
         .s-item.drop-area(
             v-for='(slot, i) in slots'
             :key='i'
             :class='{"s-active": activeSlot===slot}'
             v-drop='dropBinding(slot)'
         ) &num;{{slot}}
+
+        .parent(v-if='parentNode')
+            .s-title 父组件( {{parentComponentName}} )的slots
+            .s-item.drop-area(
+                v-for='(slot, i) in parentNode.slots'
+                :key='i'
+                :class='{"s-active": activeSlot===slot + "_parent"}'
+                v-drop='dropBinding(slot + "_parent", true)'
+            ) &num;{{slot}}
 
 </template>
 
@@ -25,6 +34,11 @@ import _ from 'lodash'
 
 interface ComponentItem extends Vue {
     slots: string[];
+}
+
+interface VueHtmlElement extends HTMLElement {
+    __vue__: Vue;
+    _cgContext: ComponentItem;
 }
 
 export default Vue.extend({
@@ -50,7 +64,28 @@ export default Vue.extend({
     },
     computed: {
         componentName () {
-            return (this.relatedNode && this.relatedNode.$vnode.componentOptions && this.relatedNode.$vnode.componentOptions.tag) || ''
+            const vueIns = (this.relatedNode?.$el as VueHtmlElement).__vue__ as Vue
+            if (vueIns) {
+                return vueIns.$vnode?.componentOptions?.tag || ''
+            }
+            return ''
+        },
+        parentNode (): null|ComponentItem {
+            if (this.relatedNode) {
+                const parentEl = this.relatedNode.$el.parentElement as HTMLElement
+                const wrapperEl = parentEl.closest('.component-wrapper') as VueHtmlElement
+                if (wrapperEl) {
+                    return wrapperEl._cgContext
+                }
+            }
+            return null
+        },
+        parentComponentName () {
+            const vueIns = (this.parentNode?.$el as VueHtmlElement).__vue__ as Vue
+            if (vueIns) {
+                return vueIns.$vnode?.componentOptions?.tag || ''
+            }
+            return ''
         },
         slots () {
             if (this.relatedNode) {
@@ -150,10 +185,10 @@ export default Vue.extend({
                 this.hideTimer = null
             }, 400)
         },
-        dropBinding (slot: string) {
+        dropBinding (slot: string, isParent = false) {
             return {
                 drop: (e: DragEvent) => {
-                    this.onSlotDrop(slot)
+                    this.onSlotDrop(slot, isParent)
                     e.stopPropagation()
                 },
                 dragEnter: (e: DragEvent) => {
@@ -184,8 +219,11 @@ export default Vue.extend({
             this.cancelHide()
             e.stopPropagation()
         },
-        onSlotDrop (slot: string) {
-            this.relatedNode.$emit('drop', slot || this.slots[0])
+        onSlotDrop (slot: string, isParent = false) {
+            const node = isParent ? this.parentNode : this.relatedNode
+            if (node) {
+                node.$emit('drop', slot ? slot.replace('_parent', '') : this.slots[0])
+            }
             this.$props.relatedNode = null
             this.show = false
         }
@@ -205,6 +243,8 @@ $blue: #1890ff
         border-radius: 2px
         border: 1px solid rgba($blue, 0.7)
         pointer-events: none
+        &.dragging
+            pointer-events: auto
     .active
         border-color: rgba($red, 0.5)
 

@@ -2,9 +2,13 @@ import Vue from 'vue'
 import ComponentDecorator from '../components/component-decorator.vue'
 import _ from 'lodash'
 
+interface ComponentItem extends Vue {
+    slots: string[];
+}
+
 interface VueHtmlElement extends HTMLElement {
     __vue__: Vue;
-    _cgContext: Vue;
+    _cgContext: ComponentItem;
 }
 
 let decoratorModel = null as null|DecoratorModel
@@ -12,7 +16,7 @@ let decoratorModel = null as null|DecoratorModel
 class DecoratorModel {
     decorator: Vue
     domClass = '.component-decorator'
-    marker = 'data-decorator'
+    marker = '.component-wrapper'
 
     constructor () {
         this.decorator = new Vue()
@@ -35,9 +39,9 @@ class DecoratorModel {
         window.addEventListener('dragover', this.onDragOver)
     }
 
-    getNodeContext (ele: EventTarget|null): Vue|null {
+    getNodeContext (ele: EventTarget|null): ComponentItem|null {
         if (ele) {
-            const wrapper = (ele as HTMLElement).closest(`[${this.marker}]`) as VueHtmlElement
+            const wrapper = (ele as HTMLElement).closest(this.marker) as VueHtmlElement
             return wrapper?._cgContext
         }
         return null
@@ -57,7 +61,7 @@ class DecoratorModel {
 
     onDragOver = (e: DragEvent) => {
         const node = this.getNodeContext(e.target)
-        if (node) {
+        if (node && node.slots.length) {
             Object.assign(this.decorator.$props, {
                 dragging: true,
                 relatedNode: node

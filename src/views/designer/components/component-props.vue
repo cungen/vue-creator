@@ -130,6 +130,8 @@ export default Vue.extend({
                     }
                 } else if (prop.type.name === 'Function') {
                     return safeEval(prop.value)
+                } else if (this.isArray(prop.type) && prop.type.some(type => ['Array', 'Object', 'Function'].indexOf(type.name) !== -1)) {
+                    return safeEval(prop.value)
                 }
             }
             return prop.value
